@@ -1,0 +1,109 @@
+---
+- name: yum update
+  yum: name=* state=latest
+  become: yes
+
+# php
+- name: install php
+  yum: name={{item}} state=latest
+  with_items:
+    - php
+    - php-mysql
+  become: yes
+
+# mariadb
+- name: install mariadb
+  yum: name={{item}} state=latest
+  become: yes
+  with_items:
+    - mariadb-server
+    - MySQL-python
+- name: start mariadb and enabled
+  service: name=mariadb state=started enabled=yes
+  become: yes
+- name: root password
+  become: yes
+  mysql_user:
+    name: "root"
+    host: "localhost"
+    password: "{{ wordpress.db_root_password }}"
+    check_implicit_admin: yes
+- name: /root/.my.cnf by template
+  template: src=my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
+  become: yes
+- name: create mysql database
+  mysql_db: name={{ wordpress.db_name }} state=present
+  become: yes
+- name: create mysql user
+  mysql_user: name={{ wordpress.db_user }} host=localhost password={{ wordpress.db_password }} priv={{ wordpress.db_name }}.*:ALL,GRANT state=present
+  become: yes
+
+# httpd
+- name: install apache
+  yum: name=httpd state=latest
+  become: yes
+- name: check exists httpd.conf.org
+  stat: path=/etc/httpd/conf/httpd.conf.org
+  register: httpd_conf_org
+  become: yes
+- name: make httpd.conf.org
+  copy: src=/etc/httpd/conf/httpd.conf dest=/etc/httpd/conf/httpd.conf.org
+  become: yes
+  when: not httpd_conf_org.stat.exists
+- name: change /var/www/ owner
+  file: dest=/var/www/ owner=vagrant recurse=yes
+  become: yes
+
+# wordpress
+- name: check exists wordpress
+  stat: path=/var/www/html/wordpress
+  register: wp_exists
+- name: check exists wordpress.tar
+  stat: path=/tmp/wordpress-{{wordpress.version}}-ja.tar.gz
+  register: wpt_exists
+- name: downroad wordpress
+  get_url: url=https://ja.wordpress.org/wordpress-{{wordpress.version}}-ja.tar.gz dest=/tmp
+  when: not wpt_exists.stat.exists and not wp_exists.stat.exists
+- name: unarchive wordpress
+  unarchive: src=/tmp/wordpress-{{wordpress.version}}-ja.tar.gz dest=/var/www/html
+  when: not wp_exists.stat.exists
+- name: change wordpress owner
+  file: dest=/var/www/html/wordpress owner=apache group=apache recurse=yes
+  become: yes
+- name: create wp-config
+  copy: src=/var/www/html/wordpress/wp-config-sample.php dest=/var/www/html/wordpress/wp-config.php
+  become: yes
+- name: change wp-config database_name
+  replace: >-
+    dest='/var/www/html/wordpress/wp-config.php'
+    regexp="define('DB_NAME', 'database_name_here');"
+    replace="define('DB_NAME', '{{ wordpress.db_name }}');"
+- name: change wp-config db_user
+  replace: >-
+    dest='/var/www/html/wordpress/wp-config.php'
+    regexp="define('DB_USER', 'username_here');"
+    replace="define('DB_USER', '{{ wordpress.db_user }}');"
+- name: change wp-config password
+  replace: >-
+    dest='/var/www/html/wordpress/wp-config.php'
+    regexp="define('DB_PASSWORD', 'password_here');"
+    replace="define('DB_PASSWORD', '{{ wordpress.db_name }}');"
+
+- name: add httpd.conf
+  become: yes
+  blockinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    state: present
+    insertafter: 'DocumentRoot "/var/www/html"'
+    content: |
+      <Directory "/var/www/html/wordpress">
+          AllowOverride All
+      </Directory>
+
+- name: add usergroup
+  user: name=vagrant groups=apache append=yes
+  become: yes
+
+- name: start apache and enabled
+  service: name=httpd state=started enabled=yes
+  become: yes

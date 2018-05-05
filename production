@@ -1,0 +1,21 @@
+# file: production
+
+[atlanta-webservers]
+localhost
+
+[atlanta-dbservers]
+localhost
+
+# webservers in all geos
+[webservers:children]
+atlanta-webservers
+
+# dbservers in all geos
+[dbservers:children]
+atlanta-dbservers
+
+# everything in the atlanta geo
+[atlanta:children]
+atlanta-webservers
+atlanta-dbservers
+
