@@ -74,19 +74,22 @@
   copy: src=/var/www/html/wordpress/wp-config-sample.php dest=/var/www/html/wordpress/wp-config.php
   become: yes
 - name: change wp-config database_name
+  become: yes
   replace: >-
     dest='/var/www/html/wordpress/wp-config.php'
-    regexp="define('DB_NAME', 'database_name_here');"
+    regexp="define('DB_NAME', '\w+');"
     replace="define('DB_NAME', '{{ wordpress.db_name }}');"
 - name: change wp-config db_user
+  become: yes
   replace: >-
     dest='/var/www/html/wordpress/wp-config.php'
-    regexp="define('DB_USER', 'username_here');"
+    regexp="define('DB_USER', '\w+');"
     replace="define('DB_USER', '{{ wordpress.db_user }}');"
 - name: change wp-config password
+  become: yes
   replace: >-
     dest='/var/www/html/wordpress/wp-config.php'
-    regexp="define('DB_PASSWORD', 'password_here');"
+    regexp="define('DB_PASSWORD', '\w+');"
     replace="define('DB_PASSWORD', '{{ wordpress.db_name }}');"
 
 - name: add httpd.conf
