@@ -74,9 +74,11 @@
   copy: src=/var/www/html/wordpress/wp-config-sample.php dest=/var/www/html/wordpress/wp-config.php
   become: yes
 - name: downlard key
-  shell: curl https://api.wordpress.org/secret-key/1.1/salt/
+  uri:
+    url: https://api.wordpress.org/secret-key/1.1/salt/
   register: wordpress_key
 - name: write key
+  become: yes
   blockinfile:
     path: /var/www/html/wordpress/wp-config.php
     block: {{ wordpress_key.stdout }}
@@ -89,11 +91,11 @@
     regexp='{{ item.regexp }}'
     line='{{ item.line }}'
   with_items:
-  - regexp: "define('DB_NAME', '\w+');"
+  - regexp: "define('DB_NAME', 'database_name_here');"
     line: "define('DB_NAME', '{{ wordpress.db_name }}');"
-  - regexp: "define('DB_USER', '\w+');"
+  - regexp: "define('DB_USER', 'username_here');"
     line: "define('DB_USER', '{{ wordpress.db_user }}');"
-  - regexp: "define('DB_PASSWORD', '\w+');"
+  - regexp: "define('DB_PASSWORD', 'password_here');"
     line: "define('DB_PASSWORD', '{{ wordpress.db_name }}');"
 
 - name: add httpd.conf
