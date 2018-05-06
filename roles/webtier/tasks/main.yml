@@ -70,30 +70,12 @@
 - name: change wordpress owner
   file: dest=/var/www/html/wordpress owner=apache group=apache recurse=yes
   become: yes
-- name: create wp-config
-  copy: src=/var/www/html/wordpress/wp-config-sample.php dest=/var/www/html/wordpress/wp-config.php
-  become: yes
 - name: downlard key
   shell: curl https://api.wordpress.org/secret-key/1.1/salt/
   register: wordpress_key
-- name: write key
+- name: create wp-config
+  template: src=wp-confi.php.j2 dest=/var/www/html/wordpress/wp-config.php owner=apache group=apache mode=0600
   become: yes
-  blockinfile:
-    path: /var/www/html/wordpress/wp-config.php
-    block: '{{ wordpress_key.stdout }}'
-- name: change wp-config database_name
-  become: yes
-  replace: >-
-    dest='/var/www/html/wordpress/wp-config.php'
-    regexp='{{ item.regexp }}'
-    replace='{{ item.line }}'
-  with_items:
-  - regexp: "define('DB_NAME', 'database_name_here');"
-    line: "define('DB_NAME', '{{ wordpress.db_name }}');"
-  - regexp: "define('DB_USER', 'username_here');"
-    line: "define('DB_USER', '{{ wordpress.db_user }}');"
-  - regexp: "define('DB_PASSWORD', 'password_here');"
-    line: "define('DB_PASSWORD', '{{ wordpress.db_name }}');"
 
 - name: add httpd.conf
   become: yes
