@@ -35,7 +35,7 @@ define('DB_USER', '{{ wordpress.db_user }}');
 define('DB_PASSWORD', '{{ wordpress.db_password }}');
 
 /** MySQL のホスト名 */
-define('DB_HOST', 'localhost');
+define('DB_HOST', '{{ wordpress.db_host }}');
 
 /** データベースのテーブルを作成する際のデータベースの文字セット */
 define('DB_CHARSET', 'utf8mb4');
@@ -52,7 +52,7 @@ define('DB_COLLATE', '');
  *
  * @since 2.6.0
  */
-{{ wordpress_key.stdout}}
+{{ wordpress_key.content }}
 /**#@-*/
 
 /**

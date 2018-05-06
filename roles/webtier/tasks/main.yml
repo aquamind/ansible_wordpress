@@ -71,7 +71,9 @@
   file: dest=/var/www/html/wordpress owner=apache group=apache recurse=yes
   become: yes
 - name: downlard key
-  shell: curl https://api.wordpress.org/secret-key/1.1/salt/
+  uri:
+    url: https://api.wordpress.org/secret-key/1.1/salt/
+    return_content: yes
   register: wordpress_key
 - name: create wp-config
   template: src=wp-confi.php.j2 dest=/var/www/html/wordpress/wp-config.php owner=apache group=apache mode=0600
