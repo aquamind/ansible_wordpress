@@ -74,22 +74,19 @@
   copy: src=/var/www/html/wordpress/wp-config-sample.php dest=/var/www/html/wordpress/wp-config.php
   become: yes
 - name: downlard key
-  uri:
-    url: https://api.wordpress.org/secret-key/1.1/salt/
+  shell: curl https://api.wordpress.org/secret-key/1.1/salt/
   register: wordpress_key
 - name: write key
   become: yes
   blockinfile:
     path: /var/www/html/wordpress/wp-config.php
-    block: {{ wordpress_key.stdout }}
+    block: '{{ wordpress_key.stdout }}'
 - name: change wp-config database_name
   become: yes
-  lineinfile: >-
+  replace: >-
     dest='/var/www/html/wordpress/wp-config.php'
-    state=present
-    backrefs=yes
     regexp='{{ item.regexp }}'
-    line='{{ item.line }}'
+    replace='{{ item.line }}'
   with_items:
   - regexp: "define('DB_NAME', 'database_name_here');"
     line: "define('DB_NAME', '{{ wordpress.db_name }}');"
