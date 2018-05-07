@@ -90,9 +90,12 @@
       <Directory "/var/www/html/wordpress">
           AllowOverride All
       </Directory>
+- name: set the port
+  firewalld: permanent=True port=80/tcp state=enabled
+  become: yes
 
 - name: add usergroup
-  user: name=vagrant groups=apache append=yes
+  user: name={{ ansible_ssh_user }} groups=apache append=yes
   become: yes
 
 - name: start apache and enabled
