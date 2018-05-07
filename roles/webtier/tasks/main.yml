@@ -51,7 +51,7 @@
   become: yes
   when: not httpd_conf_org.stat.exists
 - name: change /var/www/ owner
-  file: dest=/var/www/ owner=vagrant recurse=yes
+  file: dest=/var/www/ owner=apache recurse=yes
   become: yes
 
 # wordpress
@@ -65,6 +65,7 @@
   get_url: url=https://ja.wordpress.org/wordpress-{{wordpress.version}}-ja.tar.gz dest=/tmp
   when: not wpt_exists.stat.exists and not wp_exists.stat.exists
 - name: unarchive wordpress
+  become: yes
   unarchive: src=/tmp/wordpress-{{wordpress.version}}-ja.tar.gz dest=/var/www/html
   when: not wp_exists.stat.exists
 - name: change wordpress owner
@@ -76,7 +77,7 @@
     return_content: yes
   register: wordpress_key
 - name: create wp-config
-  template: src=wp-confi.php.j2 dest=/var/www/html/wordpress/wp-config.php owner=apache group=apache mode=0600
+  template: src=wp-config.php.j2 dest=/var/www/html/wordpress/wp-config.php owner=apache group=apache mode=0600
   become: yes
 
 - name: add httpd.conf
